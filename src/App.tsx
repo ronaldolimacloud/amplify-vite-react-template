@@ -6,32 +6,56 @@ import { useAuthenticator } from '@aws-amplify/ui-react';
 const client = generateClient<Schema>();
 
 function App() {
-  const { signOut } = useAuthenticator();
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
+  
+  const { user, signOut } = useAuthenticator();
+  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);  
+  const [players, setPlayers] = useState<Array<Schema["Player"]["type"]>>([]);
+
 
   useEffect(() => {
     client.models.Todo.observeQuery().subscribe({
       next: (data) => setTodos([...data.items]),
     });
   }, []);
+  useEffect(() => {
+    client.models.Player.observeQuery().subscribe({
+      next: (data) => setPlayers([...data.items]),
+    });
+  }, []);
+
   
 
   function createTodo() {
     client.models.Todo.create({ content: window.prompt("Todo content") });
+  }
+  function createPlayer() {
+    client.models.Player.create({ name: window.prompt("Player name") });
   }
     
   function deleteTodo(id: string) {
     client.models.Todo.delete({ id })
   }
 
+  function deletePlayer(id: string) {
+    client.models.Player.delete({ id })
+  }
+
   return (
     <main>
-      <h1>My todos</h1>
+      <h1>{user?.signInDetails?.loginId}'s todos</h1>
       <button onClick={createTodo}>+ new</button>
+      <button onClick={createPlayer}>+ new player</button>
       <ul>
         {todos.map((todo) => (
           <li key={todo.id} onClick={() => deleteTodo(todo.id)}>
             {todo.content}
+          </li>
+        ))}
+      </ul>
+      <ul>
+        {players.map((player) => (
+          <li key={player.id} onClick={() => deletePlayer(player.id)}>
+            {player.name}
           </li>
         ))}
       </ul>
